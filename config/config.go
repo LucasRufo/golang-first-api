@@ -8,7 +8,19 @@ var (
 )
 
 func Initialize() error {
+	var err error
+
+	db, err = InitializeDb()
+
+	if err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func GetDb() *gorm.DB {
+	return db
 }
 
 func GetLogger() *Logger {
