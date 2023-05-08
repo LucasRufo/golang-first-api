@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/LucasRufo/golang-first-api/config"
@@ -20,15 +21,26 @@ func Init() {
 }
 
 func GetOpportunityHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"msg": "get",
-	})
+	opportunities := []schemas.Opportunity{}
+
+	if err := db.Find(&opportunities).Error; err != nil {
+		sendError(c, http.StatusInternalServerError, "error listing opportunities")
+	}
+
+	sendSuccess(c, http.StatusOK, "get-opportunities", opportunities)
 }
 
 func GetOpportunityByIdHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"msg": "get by id",
-	})
+	id := c.Param("id")
+
+	opportunity := schemas.Opportunity{}
+
+	if err := db.First(&opportunity, id).Error; err != nil {
+		sendError(c, http.StatusNotFound, fmt.Sprintf("opening with id %s not found", id))
+		return
+	}
+
+	sendSuccess(c, http.StatusOK, "get-opportunity-by-id", opportunity)
 }
 
 func CreateOpportunityHandler(c *gin.Context) {
@@ -63,13 +75,74 @@ func CreateOpportunityHandler(c *gin.Context) {
 }
 
 func UpdateOpportunityHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"msg": "put",
-	})
+	request := UpdateOpeningRequest{}
+
+	c.BindJSON(&request)
+
+	err := request.Validate()
+
+	if err != nil {
+		logger.Errorf("validation error: %v", err.Error())
+		sendError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	opportunity := schemas.Opportunity{}
+
+	id := c.Param("id")
+
+	if err := db.First(&opportunity, id).Error; err != nil {
+		sendError(c, http.StatusNotFound, fmt.Sprintf("opening with id %s not found", id))
+		return
+	}
+
+	if request.Role != "" {
+		opportunity.Role = request.Role
+	}
+
+	if request.Company != "" {
+		opportunity.Company = request.Company
+	}
+
+	if request.Location != "" {
+		opportunity.Location = request.Location
+	}
+
+	if request.Remote != nil {
+		opportunity.Remote = *request.Remote
+	}
+
+	if request.Link != "" {
+		opportunity.Link = request.Link
+	}
+
+	if request.Salary > 0 {
+		opportunity.Salary = request.Salary
+	}
+
+	if err := db.Save(&opportunity).Error; err != nil {
+		logger.Errorf("error updating opportunity: %v", err.Error())
+		sendError(c, http.StatusInternalServerError, fmt.Sprintf("error updating opportunity with id: %s", id))
+		return
+	}
+
+	sendSuccess(c, http.StatusOK, "update-opportunity", opportunity)
 }
 
 func DeleteOpportunityHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"msg": "delete",
-	})
+	id := c.Param("id")
+
+	opportunity := schemas.Opportunity{}
+
+	if err := db.First(&opportunity, id).Error; err != nil {
+		sendError(c, http.StatusNotFound, fmt.Sprintf("opening with id %s not found", id))
+		return
+	}
+
+	if err := db.Delete(&opportunity).Error; err != nil {
+		sendError(c, http.StatusInternalServerError, fmt.Sprintf("error deleting opportunity with id %s", id))
+		return
+	}
+
+	sendSuccess(c, http.StatusNoContent, "delete-opportunity", opportunity)
 }
