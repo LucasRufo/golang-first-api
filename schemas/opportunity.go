@@ -16,7 +16,7 @@ type Opportunity struct {
 	Salary   int64
 }
 
-type OpportunityReponse struct {
+type OpportunityResponse struct {
 	ID        uint      `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`

@@ -43,6 +43,18 @@ func GetOpportunityByIdHandler(c *gin.Context) {
 	sendSuccess(c, http.StatusOK, "get-opportunity-by-id", opportunity)
 }
 
+// @BasePath /api/v1
+
+// @Summary Create Opportunity
+// @Description Creates a new Opportunity
+// @Tags Opportunity
+// @Accept json
+// @Produce json
+// @Param request body CreateOpeningRequest true "Request Body"
+// @Success 200 {object} CreateOpeningResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /opportunity [post]
 func CreateOpportunityHandler(c *gin.Context) {
 	request := CreateOpeningRequest{}
 
